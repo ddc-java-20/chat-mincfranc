@@ -1,12 +1,18 @@
 package edu.cnm.deepdive.chat.model.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 
 @SuppressWarnings("JpaDataSourceORMInspection")
@@ -32,6 +38,11 @@ public class Channel {
   @Column(nullable = false, updatable = true)
   private boolean active;
 
+  @OneToMany(mappedBy = "channel", fetch = FetchType.LAZY,
+      cascade = CascadeType.ALL, orphanRemoval = true)
+  @OrderBy("posted ASC")
+  private final List<Message> messages = new LinkedList<>();
+
   public long getId() {
     return id;
   }
@@ -46,6 +57,10 @@ public class Channel {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public List<Message> getMessages() {
+    return messages;
   }
 
   public boolean isActive() {
@@ -78,6 +93,5 @@ public class Channel {
   void generateFieldValues() {
     externalKey = UUID.randomUUID();
   }
-
 
 }

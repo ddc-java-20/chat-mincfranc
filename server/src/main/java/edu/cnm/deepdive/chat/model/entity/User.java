@@ -1,20 +1,25 @@
 package edu.cnm.deepdive.chat.model.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import java.net.URL;
 import java.time.Instant;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
-
-
 
 @SuppressWarnings("JpaDataSourceORMInspection")
 @Entity
@@ -24,7 +29,6 @@ import org.hibernate.annotations.CreationTimestamp;
         @Index(columnList = "joined")
     }
 )
-
 public class User {
 
   @Id
@@ -48,6 +52,10 @@ public class User {
 
   @Column(nullable = false, updatable = false, length = 30, unique = true)
   private String oauthKey;
+
+  @OneToMany(mappedBy = "sender", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+  @OrderBy("channel.name ASC, posted ASC")
+  private final List<Message> messages = new LinkedList<>();
 
   public long getId() {
     return id;
@@ -85,6 +93,10 @@ public class User {
     this.oauthKey = oauthKey;
   }
 
+  public List<Message> getMessages() {
+    return messages;
+  }
+
   @Override
   public int hashCode() {
     return Long.hashCode(id);
@@ -103,12 +115,9 @@ public class User {
     return result;
   }
 
-
   @PrePersist
   void generateFieldValues() {
     externalKey = UUID.randomUUID();
   }
-
-
 
 }

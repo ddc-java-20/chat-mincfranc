@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Copyright 2024 CNM Ingenuity, Inc.
+  Copyright 2025 CNM Ingenuity, Inc.
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -16,11 +16,29 @@
 -->
 <resources>
   <!-- Base application theme. -->
-  <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-    <!-- Customize your theme here. -->
-    <item name="colorPrimary">@color/primary_color</item>
-    <item name="colorPrimaryDark">@color/primary_color_dark</item>
-    <item name="colorAccent">@color/accent_color</item>
+  <style name="AppTheme" parent="Theme.Material3.DayNight">
+    <!-- TODO Customize your theme here. -->
+    <item name="toolbarTitleSize">@dimen/toolbar_title_size</item>
+    <item name="colorCancel">@color/cancel_color</item>
+    <item name="colorSave">@color/save_color</item>
+  </style>
+
+  <style name="AppTheme.NoActionBar">
+    <item name="windowActionBar">false</item>item>
+    <item name= "windowNoTitle">true</item>
+    <item name="toolbarStyle">@style/AppTheme.Toolbar</item>
+  </style>
+
+  <style name="AppTheme.Toolbar" parent="Widget.Material3.Toolbar">
+    <item name="android:background">?attr/colorPrimary</item>
+    <item name="titleTextAppearance">@style/ToolbarTitle</item>
+    <item name="colorControlNormal">?attr/colorOnPrimary</item>
+  </style>
+
+  <style name="ToolbarTitle">
+    <item name="android:textColor">?attr/colorOnPrimary</item>
+    <item name="android:textSize">?attr/toolbarTitleSize</item>
+
   </style>
 
 </resources>

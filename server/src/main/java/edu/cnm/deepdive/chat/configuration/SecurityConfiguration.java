@@ -41,7 +41,7 @@ public class SecurityConfiguration {
   }
 
   //this is our security chain, describes security policy
-  //any incoming request will be striped of its data and we wont return any data
+  //any incoming request will be stripped of its data and we won't return any data
   //request's authorization token will be compared
   @Bean
   public SecurityFilterChain provideFilterChain(HttpSecurity security) throws Exception {

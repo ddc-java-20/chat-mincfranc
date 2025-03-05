@@ -2,6 +2,7 @@ package edu.cnm.deepdive.chat.service;
 
 import edu.cnm.deepdive.chat.model.dao.UserRepository;
 import edu.cnm.deepdive.chat.model.entity.User;
+import java.net.URL;
 import java.util.UUID;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -44,6 +45,22 @@ public class UserService implements AbstractUserService {
 
   @Override
   public User update(User user) {
-    return null;
+    return userRepository
+        //getCurrent is the bearer token- it's what the user did- to change display name
+        //fetched existing record using that id
+        .findById(getCurrent().getId())
+        .map((u) -> {
+          String displayName = user.getDisplayName();
+          if (displayName != null) {
+            u.setDisplayName(displayName);
+          }
+          URL avatar = user.getAvatar();
+          if (avatar != null) {
+            u.setAvatar(avatar);
+          }
+          return userRepository.save(u);
+        })
+        .orElseThrow();
   }
+
 }

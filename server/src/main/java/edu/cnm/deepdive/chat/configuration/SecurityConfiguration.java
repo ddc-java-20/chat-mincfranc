@@ -3,8 +3,10 @@ package edu.cnm.deepdive.chat.configuration;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -23,6 +25,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@Profile("service")
 public class SecurityConfiguration {
 
   //will convert from Jwt to something that abstracts authentication token- our bearer token.
@@ -33,8 +36,11 @@ public class SecurityConfiguration {
 
   //in Spring Beans we don't do @Inject, instead- @Autowired
   @Autowired
-  public SecurityConfiguration(Converter<Jwt, ? extends AbstractAuthenticationToken> converter,
-      String issuerUri, String clientId) {
+  public SecurityConfiguration
+  (Converter<Jwt, ? extends AbstractAuthenticationToken> converter,
+      @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String issuerUri,
+      @Value("${spring.security.oauth2.resourceserver.jwt.client-id}") String clientId
+  ) {
     this.converter = converter;
     this.issuerUri = issuerUri;
     this.clientId = clientId;
@@ -52,11 +58,12 @@ public class SecurityConfiguration {
         .sessionManagement((session) ->
             session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests((auth) -> auth.anyRequest().authenticated())
-        .oauth2ResourceServer((oauth) -> oauth.jwt((jwt) -> jwt.jwtAuthenticationConverter(converter)))
+        .oauth2ResourceServer((oauth) ->
+            oauth.jwt((jwt) -> jwt.jwtAuthenticationConverter(converter)))
         .build();
   }
 
-//Decoder with multiple policies will evaluate at audience claim & claim issuer.
+//Decoder with multiple rules to evaluate at audience claim & claim issuer.
   //Each policy starts with OAuth2TokenValidator
   //Spring will look for some bean that has a decoder and bec we provided our own bean, Spring will compare against our bean
   @Bean
@@ -64,6 +71,7 @@ public class SecurityConfiguration {
     NimbusJwtDecoder decoder = JwtDecoders.fromIssuerLocation(issuerUri);
     OAuth2TokenValidator<Jwt> audienceValidator =
         new JwtClaimValidator<List<String>>(JwtClaimNames.AUD, (aud) -> aud.contains(clientId));
+    //the issuer of the bearer token
     OAuth2TokenValidator<Jwt> issuerValidator = JwtValidators.createDefaultWithIssuer(issuerUri);
     OAuth2TokenValidator<Jwt> combinedValidator =
         new DelegatingOAuth2TokenValidator<>(audienceValidator, issuerValidator);

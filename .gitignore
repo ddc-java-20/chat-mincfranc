@@ -90,18 +90,16 @@ HELP.md
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+application-local.yaml
 
 ### Database ###
 
-# TODO Add data directory to this in JDBC/JPA/Spring Data projects with embedded databases!
-# TODO Add database log files located outside the data directory in JDBC/JPA/Spring Data projects!
-
+db/
 
 ### OS X ###
 
 # - metadata
 .DS_Store
-
 
 ### DDC ###
 

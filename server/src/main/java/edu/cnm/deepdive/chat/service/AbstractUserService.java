@@ -13,7 +13,7 @@ public interface AbstractUserService {
   User get(UUID externalKey);
 
 
-  User getOrCreate(String oauthKey, String displayName,  );
+  User getOrCreate(String oauthKey, String displayName);
 
   User update(User user);
 

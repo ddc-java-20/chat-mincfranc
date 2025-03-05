@@ -53,8 +53,9 @@ public class User {
   @Column(nullable = false, updatable = false, length = 30, unique = true)
   private String oauthKey;
 
-  @OneToMany(mappedBy = "sender", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-  @OrderBy("channel.name ASC, posted ASC")
+  @OneToMany(mappedBy = "sender", fetch = FetchType.LAZY,
+      cascade = CascadeType.ALL, orphanRemoval = true)
+  @OrderBy("posted ASC")
   private final List<Message> messages = new LinkedList<>();
 
   public long getId() {

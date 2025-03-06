@@ -5,7 +5,12 @@ import edu.cnm.deepdive.chat.model.entity.Channel;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+
+//class cant be seen outside the package but spring can still instantiate
+
+@Service
 class ChannelService implements AbstractChannelService {
 
 

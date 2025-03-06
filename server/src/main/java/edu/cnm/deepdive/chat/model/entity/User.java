@@ -1,5 +1,10 @@
 package edu.cnm.deepdive.chat.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -29,19 +34,25 @@ import org.hibernate.annotations.CreationTimestamp;
         @Index(columnList = "joined")
     }
 )
+//Any of the fields that are nulls won't bother serialization
+//Json looks at our getters
+@JsonInclude(Include.NON_NULL)
 public class User {
 
   @Id
   @GeneratedValue
   @Column(name = "user_profile_id", nullable = false, updatable = false)
+  @JsonIgnore
   private long id;
 
   @Column(nullable = false, updatable = false, unique = true)
+  @JsonProperty(value = "key", access = Access.READ_ONLY)
   private UUID externalKey;
 
   @CreationTimestamp
   @Temporal(TemporalType.TIMESTAMP)
   @Column(nullable = false, updatable = false)
+  @JsonProperty(access = Access.READ_ONLY)
   private Instant joined;
 
   @Column(nullable = false, updatable = true, length = 30, unique = true)
@@ -51,11 +62,13 @@ public class User {
   private URL avatar;
 
   @Column(nullable = false, updatable = false, length = 30, unique = true)
+  @JsonIgnore
   private String oauthKey;
 
   @OneToMany(mappedBy = "sender", fetch = FetchType.LAZY,
       cascade = CascadeType.ALL, orphanRemoval = true)
   @OrderBy("posted ASC")
+  @JsonIgnore
   private final List<Message> messages = new LinkedList<>();
 
   public long getId() {
@@ -70,9 +83,7 @@ public class User {
     return joined;
   }
 
-  public String getDisplayName() {
-    return displayName;
-  }
+  public String getDisplayName() { return displayName;}
 
   public void setDisplayName(String displayName) {
     this.displayName = displayName;
@@ -94,9 +105,7 @@ public class User {
     this.oauthKey = oauthKey;
   }
 
-  public List<Message> getMessages() {
-    return messages;
-  }
+  public List<Message> getMessages() {return messages;}
 
   @Override
   public int hashCode() {

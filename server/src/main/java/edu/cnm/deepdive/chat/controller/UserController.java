@@ -36,7 +36,7 @@ public class UserController {
     return userService.update(user);
   }
 
-  @GetMapping(path= "/{externalKey", produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(path= "/{externalKey}", produces = MediaType.APPLICATION_JSON_VALUE)
   public User get(@PathVariable UUID externalKey) {
     return userService.get(externalKey);
   }

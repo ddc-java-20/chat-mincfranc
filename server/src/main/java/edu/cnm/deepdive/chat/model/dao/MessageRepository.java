@@ -10,6 +10,17 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 //this is key query to refresh display, recurrently q20 sec
   List<Message> getAllByChannelAndPostedAfterOrderByPostedAsc(Channel channel, Instant posted);
 
+/*
+  SELECT
+  n FROM message AS n
+  WHERE
+    n.channel = channel
+    AND n.posted > :posted
+    ORDER BY
+    n.posted ABC
+
+ */
+
 }
 
 

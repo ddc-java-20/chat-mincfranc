@@ -6,6 +6,16 @@ GET https://examples.http-client.intellij.net/get
 GET http://localhost:8090/chat/users/c3794200-e78f-4c09-8ea3-761e1c55652f
 Authorization: Bearer {{bearerToken}}
 
+### Update my profile
+PUT http://localhost:8090/chat/users/me
+Authorization: Bearer {{bearerToken}}
+Content-Type: application/json
+
+{
+  "displayName": "Minerva",
+  "avatar": "null"
+}
+
 ### Retrieve my profile
 GET http://localhost:8090/chat/users/me
 Authorization: Bearer {{bearerToken}}

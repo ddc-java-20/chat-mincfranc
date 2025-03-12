@@ -35,7 +35,7 @@ public class MessageController {
   public List<Message> post(
       @RequestBody Message message,
       @PathVariable UUID channelKey,
-      @RequestParam (required = false, defaultValue = DEFAULT_SINCE_VALUE) long since
+      @RequestParam(required = false, defaultValue = DEFAULT_SINCE_VALUE) long since
   ) {
     return messageService
         .add(message, channelKey, userService.getCurrent(), Instant.ofEpochMilli(since));

@@ -2,15 +2,36 @@ package edu.cnm.deepdive.chat.model.dao;
 
 import edu.cnm.deepdive.chat.model.entity.Channel;
 import edu.cnm.deepdive.chat.model.entity.Message;
+import java.awt.print.Pageable;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 public interface MessageRepository extends JpaRepository<Message, Long> {
-//this is key query to refresh display, recurrently q20 sec
+
+public static final String LATEST_POSTED_QUERY = """
+      SELECT 
+      m.posted 
+      FROM 
+        Message AS m 
+      WHERE 
+        m.channel = :channel 
+        AND m.posted > :posted 
+      ORDER BY 
+        m.posted DESC
+      """;
+
+  //this is key query to refresh display, recurrently q20 sec
   List<Message> getAllByChannelAndPostedAfterOrderByPostedAsc(Channel channel, Instant posted);
 
-/*
+  @Query(LATEST_POSTED_QUERY)
+  List<Instant> getLastPostedByChannelAndPostedAfter(
+      Channel channel, Instant posted, Pageable pageable);
+
+
+  /*
   SELECT
   n FROM message AS n
   WHERE

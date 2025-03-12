@@ -16,5 +16,5 @@ public interface AbstractMessageService {
   DeferredResult<List<Message>> pullSince(UUID channelKey, Instant since);
 
 
-
+  DeferredResult<List<Message>> pollSince(UUID channelKey, Instant since);
 }

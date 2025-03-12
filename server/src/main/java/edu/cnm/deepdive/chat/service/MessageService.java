@@ -14,6 +14,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.async.DeferredResult;
 
@@ -23,20 +24,21 @@ public class MessageService implements AbstractMessageService {
   private static final Duration MAX_SINCE_DURATION = Duration.ofMinutes(30);
   private static final Long POLLING_TIMEOUT_MS = 20_000L;
   private static final int POLLING_POOL_SIZE = 4;
+  private static final Long POLLING_INTERVAL_MS = 2000L;
+  private static final PageRequest TOP_ONE = PageRequest.of(0, 1);
+  private static final List<Message> EMPTY_MESSAGE_LIST = List.of();
 
-  private final ChannelRepository channelRepository;
   private final MessageRepository messageRepository;
+  private final ChannelRepository channelRepository;
   private final ScheduledExecutorService scheduler;
-
 
   @Autowired
   public MessageService(MessageRepository messageRepository, ChannelRepository channelRepository) {
     this.messageRepository = messageRepository;
     this.channelRepository = channelRepository;
-    scheduler = Executors.newScheduledThreadPool(POLLING_POOL_SIZE)
+    scheduler = Executors.newScheduledThreadPool(POLLING_POOL_SIZE);
   }
 
-  //these are 2 main business logic methods: add & getSince. Details are in the helper methods
   @Override
   public List<Message> add(Message message, UUID channelKey, User author, Instant since) {
     return channelRepository
@@ -55,20 +57,44 @@ public class MessageService implements AbstractMessageService {
 
   @Override
   public DeferredResult<List<Message>> pullSince(UUID channelKey, Instant since) {
+    return null;
+  }
+
+  @Override
+  public DeferredResult<List<Message>> pollSince(UUID channelKey, Instant since) {
+    return channelRepository
+        .findByExternalKey(channelKey)
+        .map((channel) -> setupPolling(channel, since))
+        .orElseThrow();
+  }
+
+  private DeferredResult<List<Message>> setupPolling(Channel channel, Instant since) {
     DeferredResult<List<Message>> result = new DeferredResult<>(POLLING_TIMEOUT_MS);
-    ScheduledFuture<?>[] future = new ScheduledFuture<?>[1];
-    result.onTimeout(() -> result.setResult(List.of()));
-    Runnable runnable = () -> {
-      if (!messageRepository.getAllByChannelAndPostedAfterOrderByPostedAsc(, since).isEmpty()) {
-        result.setResult(
-            messageRepository.getAllByChannelAndPostedAfterOrderByPostedAsc(, since));
-        future[0].cancel(true);
-      }
-    };
-    //This is the first delay before it starts. Runnable is a task, invoke its run method AFTER the
-    // first 2 seconds elapsed, then 2 sec after. It will do that until we cancel it.
-    future[0] = scheduler.scheduleWithFixedDelay(runnable, 2000L, 2000L, TimeUnit.MILLISECONDS);
+    ScheduledFuture<?>[] futurePolling = new ScheduledFuture<?>[1];
+    Runnable timeoutTask = () -> timeoutWithEmptyList(result, futurePolling);
+    result.onTimeout(timeoutTask);
+    Runnable pollingTask = () -> checkForNewMessages(channel, since, result, futurePolling);
+    futurePolling[0] = scheduler.scheduleWithFixedDelay(
+        pollingTask, POLLING_INTERVAL_MS, POLLING_INTERVAL_MS, TimeUnit.MILLISECONDS);
     return result;
+  }
+
+  private static void timeoutWithEmptyList(
+      DeferredResult<List<Message>> result, ScheduledFuture<?>[] futurePolling) {
+    result.setResult(EMPTY_MESSAGE_LIST);
+    futurePolling[0].cancel(true);
+  }
+
+  private void checkForNewMessages(Channel channel, Instant since,
+      DeferredResult<List<Message>> result,
+      ScheduledFuture<?>[] futurePolling) {
+    if (!messageRepository
+        .getLastPostedByChannelAndPostedAfter(channel, since, TOP_ONE)
+        .isEmpty()) {
+      result.setResult(
+          messageRepository.getAllByChannelAndPostedAfterOrderByPostedAsc(channel, since));
+      futurePolling[0].cancel(true);
+    }
   }
 
   private List<Message> getSinceAtMost(Instant since, Channel channel) {

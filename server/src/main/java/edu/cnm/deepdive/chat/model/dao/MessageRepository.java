@@ -2,16 +2,15 @@ package edu.cnm.deepdive.chat.model.dao;
 
 import edu.cnm.deepdive.chat.model.entity.Channel;
 import edu.cnm.deepdive.chat.model.entity.Message;
-import java.awt.print.Pageable;
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface MessageRepository extends JpaRepository<Message, Long> {
 
-public static final String LATEST_POSTED_QUERY = """
+  public static final String LATEST_POSTED_QUERY = """
       SELECT 
       m.posted 
       FROM 
@@ -43,7 +42,6 @@ public static final String LATEST_POSTED_QUERY = """
  */
 
 }
-
 
 //we never need to retrieve a message by its external key
 //when the controller receives a request to fetch messages since a date instance, if there aren't, it will wait 20 sec until there are some

@@ -7,7 +7,6 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-
 //class cant be seen outside the package but spring can still instantiate
 
 @Service
@@ -73,7 +72,8 @@ class ChannelService implements AbstractChannelService {
   public boolean getActive(UUID externalKey) {
     return channelRepository
         .findByExternalKey(externalKey)
-        .map(Channel::isActive)  //Optional<Boolean> the logic of the optional focuses on the WHAT vs HOW
+        .map(
+            Channel::isActive)  //Optional<Boolean> the logic of the optional focuses on the WHAT vs HOW
         .orElseThrow();
   }
 

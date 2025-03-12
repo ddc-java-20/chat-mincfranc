@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.async.DeferredResult;
 
 @RestController
 @RequestMapping("/channels/{channelKey}/messages")
@@ -41,10 +42,11 @@ public class MessageController {
   }
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-  public List<Message> get(@PathVariable UUID channelKey,
+  public DeferredResult<List<Message>> get(
+      @PathVariable UUID channelKey,
       @RequestParam(required = false, defaultValue = DEFAULT_SINCE_VALUE) long since
   ) {
-    return messageService.getSince(channelKey, Instant.ofEpochMilli(since));
+    return messageService.pollSince(channelKey, Instant.ofEpochMilli(since));
   }
 
 }

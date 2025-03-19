@@ -19,7 +19,7 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
         m.channel = :channel 
         AND m.posted > :posted 
       ORDER BY 
-        m.posted DESC
+        m.posted ASC
       """;
 
   //this is key query to refresh display, recurrently q20 sec

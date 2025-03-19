@@ -24,7 +24,7 @@ public class MessageService {
   private final Scheduler scheduler;
 
   @Inject
-  public MessageService(ChatServiceProxy proxy, ChatServiceLongPollingProxy longPollingProxy,
+   MessageService(ChatServiceProxy proxy, ChatServiceLongPollingProxy longPollingProxy,
       GoogleSignInService signInService) {
     this.proxy = proxy;
     this.longPollingProxy = longPollingProxy;
@@ -32,8 +32,8 @@ public class MessageService {
     scheduler = Schedulers.io();
   }
 
-  //it's a piece of machinery
-  Single<List<Message>> getMessages(UUID channelKey, Instant since) {
+  //it's a piece of machinery, needs to be public to be accessed by messageViewModel.java
+  public Single<List<Message>> getMessages(UUID channelKey, Instant since) {
     return signInService
         .refreshBearerToken()
         .observeOn(scheduler)
@@ -44,7 +44,7 @@ public class MessageService {
 
 
   //telling server to send back any new messages including this one
-  Single<List<Message>> sendMessage(UUID channelKey, Message message, Instant since) {
+  public Single<List<Message>> sendMessage(UUID channelKey, Message message, Instant since) {
     // TODO: 3/19/2025 Refresh bearer token and pass downstream.
     return signInService
         .refreshBearerToken()
@@ -54,7 +54,7 @@ public class MessageService {
             .postMessage(message, channelKey, since.toEpochMilli(), bearerToken));
   }
 
-  Single<List<Channel>> getChannels(boolean active) {
+  public Single<List<Channel>> getChannels(boolean active) {
     // TODO: 3/19/2025 Refresh bearer token and pass downstream.
     return signInService
         .refreshBearerToken()

@@ -22,7 +22,7 @@ public class MessageViewModel extends ViewModel implements DefaultLifecycleObser
 
   private static final String TAG = MessageViewModel.class.getSimpleName();
 
-//FIRST create fields to: reference to message service, to get all messages for a particular channel
+  //FIRST create fields to: reference to message service, to get all messages for a particular channel
 //as we make asynchronous requests and UI has received messages, then empty the jobs requests bucket
   private final MessageService messageService;
   private final MutableLiveData<List<Message>> messages;
@@ -31,7 +31,7 @@ public class MessageViewModel extends ViewModel implements DefaultLifecycleObser
   private final MutableLiveData<Throwable> throwable;
   private final CompositeDisposable pending;
 
-//messageService will be the only thing Hilt will take in from the outside with this constructor
+  //messageService will be the only thing Hilt will take in from the outside with this constructor
   @Inject
   public MessageViewModel(MessageService messageService) {
     this.messageService = messageService;
@@ -43,7 +43,7 @@ public class MessageViewModel extends ViewModel implements DefaultLifecycleObser
     fetchChannels();
   }
 
-//getters for variables with LiveData, remove Mutable because we want the UI to observe and not have
+  //getters for variables with LiveData, remove Mutable because we want the UI to observe and not have
 // access to changing the LiveData
   public LiveData<List<Channel>> getChannels() {
     return channels;
@@ -63,9 +63,8 @@ public class MessageViewModel extends ViewModel implements DefaultLifecycleObser
   public void setSelectedChannel(@NotNull Channel channel) {
     if (!channel.equals(selectedChannel.getValue())) {
       messages.setValue(new LinkedList<>());
-      // TODO: 3/19/2025 Start a new query for messages in the selected channel. 2 housekeeping methods,
-      //and methods for UI to invoke to post a message
       selectedChannel.setValue(channel);
+      fetchMessages();
     }
   }
 
@@ -87,15 +86,15 @@ public class MessageViewModel extends ViewModel implements DefaultLifecycleObser
 
   //Ternary, if the list is empty, fetch since the last time they were fetched(?), else get the last posted (:)
   //Instant.MIN= the last 30 minutes per messageService in server side- getEffectiveSince(MAX= 30 MIN)
+
+  /**
+   * @noinspection DataFlowIssue
+   */
   public void fetchMessages() {
     throwable.postValue(null);
     List<Message> messages = this.messages.getValue();
     //noinspection SequencedCollectionMethodCanBeUsed,DataFlowIssue
-    Instant since = messages.isEmpty()
-        ? Instant.MIN
-        : messages
-            .get(messages.size() -1)
-            .getPosted();
+    Instant since = getSince(messages);
     //this gets a piece of machinery<first 4 parts on board diagram of asynch process>
     //subscribe - provides consumer of a successful result, of an unsuccessful result & pending
     messageService
@@ -104,15 +103,42 @@ public class MessageViewModel extends ViewModel implements DefaultLifecycleObser
             (msgs) -> {
               messages.addAll(msgs);
               this.messages.postValue(messages);
-              fetchChannels();   //successful result consumer
+              fetchChannels();   //successful result consumer that is called at other points and times, not here, not recursive
             },
             this::postThrowable, //unsuccessful result consumer
             pending
         );
-
   }
 
-//adding a lifecycle observer in the UI model of a UI controller if we have an is-a relationship
+  /**
+   * @noinspection DataFlowIssue
+   */ //list of a bunch of machines in a row, then ignoreElement turns it into a completion event
+  //when we subscribe to a completable we don't have a consumer
+  //then put ticket in pending bucket
+  public void sendMessage(Message message) {
+    throwable.setValue(null);
+    Instant since = getSince(messages.getValue());
+    messageService
+        .sendMessage(selectedChannel.getValue().getKey(), message, since)
+        .ignoreElement()
+        .subscribe(
+            () -> {
+            },
+            this::postThrowable,
+            pending
+        );
+  }
+
+  @Override
+  public void onResume(@NotNull LifecycleOwner owner) {
+    DefaultLifecycleObserver.super.onResume(owner);
+    if (selectedChannel.getValue() != null) {
+      fetchChannels();
+    }
+    ;
+  }
+
+  //adding a lifecycle observer in the UI model of a UI controller if we have an is-a relationship
 //we're clearing container contents BUT NOT deleting container, we will use container for new content
   @Override
   public void onStop(@NotNull LifecycleOwner owner) {
@@ -120,10 +146,20 @@ public class MessageViewModel extends ViewModel implements DefaultLifecycleObser
     DefaultLifecycleObserver.super.onStop(owner);
   }
 
-//throwable is the parameter, this.throwable is the value of the field which the parameter refers to
+  private static Instant getSince(List<Message> messages) {
+    //noinspection SequencedCollectionMethodCanBeUsed
+    return messages.isEmpty()
+        ? Instant.MIN
+        : messages
+            .get(messages.size() - 1)
+            .getPosted();
+  }
+
+  //throwable is the parameter, this.throwable is the value of the field which the parameter refers to
   private void postThrowable(Throwable throwable) {
-    Log.e(TAG, throwable.getMessage(),throwable);
+    Log.e(TAG, throwable.getMessage(), throwable);
     this.throwable.postValue(throwable);
   }
+
 
 }

@@ -39,7 +39,7 @@ public class MessageService {
         .observeOn(scheduler)
         .map((token) -> String.format(BEARER_TOKEN_FORMAT, token))
         .flatMap((bearerToken) -> longPollingProxy
-            .getSince(channelKey, since.toEpochMilli(), bearerToken));
+            .getSince(channelKey, since, bearerToken));
   }
 
 
@@ -51,7 +51,7 @@ public class MessageService {
         .observeOn(scheduler)
         .map((token) -> String.format(BEARER_TOKEN_FORMAT, token))
         .flatMap((bearerToken) -> proxy
-            .postMessage(message, channelKey, since.toEpochMilli(), bearerToken));
+            .postMessage(message, channelKey, since, bearerToken));
   }
 
   public Single<List<Channel>> getChannels(boolean active) {

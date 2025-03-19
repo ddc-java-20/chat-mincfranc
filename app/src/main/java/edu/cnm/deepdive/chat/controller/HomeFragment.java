@@ -13,12 +13,14 @@ import androidx.annotation.Nullable;
 import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Lifecycle.State;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 import dagger.hilt.android.AndroidEntryPoint;
 import edu.cnm.deepdive.chat.R;
 import edu.cnm.deepdive.chat.databinding.FragmentHomeBinding;
 import edu.cnm.deepdive.chat.viewmodel.LoginViewModel;
+import edu.cnm.deepdive.chat.viewmodel.MessageViewModel;
 
 //the only reason we need ViewModel is bec we need it to sign out
 
@@ -28,7 +30,8 @@ public class HomeFragment extends Fragment implements MenuProvider {
   private static final String TAG = HomeFragment.class.getSimpleName();
 
   private FragmentHomeBinding binding;
-  private LoginViewModel viewModel;
+  private LoginViewModel loginViewModel;
+  private MessageViewModel messageViewModel;
 
   @Nullable
   @Override
@@ -42,11 +45,12 @@ public class HomeFragment extends Fragment implements MenuProvider {
   @Override
   public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
-    viewModel = new ViewModelProvider(requireActivity())
+    loginViewModel = new ViewModelProvider(requireActivity())
         .get(LoginViewModel.class);
-    viewModel
+    LifecycleOwner owner = getViewLifecycleOwner();
+    loginViewModel
         .getAccount()
-        .observe(getViewLifecycleOwner(), (account) -> {
+        .observe(owner, (account) -> {
           if (account != null) {
             Log.d(TAG, "Bearer " + account.getIdToken());
           } else {
@@ -54,7 +58,16 @@ public class HomeFragment extends Fragment implements MenuProvider {
                 .navigate(HomeFragmentDirections.navigateToPreLoginFragment());
           }
         });
-    requireActivity().addMenuProvider(this, getViewLifecycleOwner(), State.RESUMED);
+    messageViewModel = new ViewModelProvider(this)
+        .get(MessageViewModel.class);
+    getLifecycle().addObserver(messageViewModel);
+    messageViewModel
+        .getChannels()
+            .observe(owner, (channels) -> {
+              // TODO: 3/19/2025 Attach an array adapter to a spinner to display the channels.
+              Log.d(TAG, "Channels " + channels);
+            });
+    requireActivity().addMenuProvider(this, owner, State.RESUMED);
   }
 
   @Override
@@ -73,7 +86,7 @@ public class HomeFragment extends Fragment implements MenuProvider {
   public boolean onMenuItemSelected(@NonNull MenuItem menuItem) {
     boolean handled = false;
     if (menuItem.getItemId() == R.id.sign_out) {
-      viewModel.signOut();
+      loginViewModel.signOut();
       handled= true;
     }
     return handled;

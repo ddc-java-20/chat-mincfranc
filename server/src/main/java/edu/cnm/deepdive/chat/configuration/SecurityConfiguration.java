@@ -28,7 +28,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @Profile("service")
 public class SecurityConfiguration {
 
-  //will convert from Jwt to something that abstracts authentication token- our bearer token.
+  //will convert from Jwt to something that abstracts authentication token: our bearer token.
   private final Converter<Jwt, ? extends AbstractAuthenticationToken> converter;
   private final String issuerUri;
   private final String clientId;

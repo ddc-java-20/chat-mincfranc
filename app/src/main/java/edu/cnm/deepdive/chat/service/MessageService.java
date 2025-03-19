@@ -16,43 +16,51 @@ public class MessageService {
 
   //This is a repository, the server sees it as a way to get and send messages.
 
+  private static final String BEARER_TOKEN_FORMAT = "Bearer %s";
+
   private final ChatServiceProxy proxy;
   private final ChatServiceLongPollingProxy longPollingProxy;
-
+  private final GoogleSignInService signInService;
   private final Scheduler scheduler;
 
   @Inject
-  public MessageService(ChatServiceProxy proxy, ChatServiceLongPollingProxy longPollingProxy) {
+  public MessageService(ChatServiceProxy proxy, ChatServiceLongPollingProxy longPollingProxy,
+      GoogleSignInService signInService) {
     this.proxy = proxy;
     this.longPollingProxy = longPollingProxy;
+    this.signInService = signInService;
     scheduler = Schedulers.io();
   }
 
   //it's a piece of machinery
   Single<List<Message>> getMessages(UUID channelKey, Instant since) {
-    // TODO: 3/19/2025 Refresh bearer token and pass downstream.
-    return longPollingProxy
-        .getSince(channelKey, since.toEpochMilli())
-        .subscribeOn(scheduler);
-
+    return signInService
+        .refreshBearerToken()
+        .observeOn(scheduler)
+        .map((token) -> String.format(BEARER_TOKEN_FORMAT, token))
+        .flatMap((bearerToken) -> longPollingProxy
+            .getSince(channelKey, since.toEpochMilli(), bearerToken));
   }
+
 
   //telling server to send back any new messages including this one
   Single<List<Message>> sendMessage(UUID channelKey, Message message, Instant since) {
     // TODO: 3/19/2025 Refresh bearer token and pass downstream.
-    return proxy
-        .postMessage(message, channelKey, since.toEpochMilli())
-        .subscribeOn(scheduler);
+    return signInService
+        .refreshBearerToken()
+        .observeOn(scheduler)
+        .map((token) -> String.format(BEARER_TOKEN_FORMAT, token))
+        .flatMap((bearerToken) -> proxy
+            .postMessage(message, channelKey, since.toEpochMilli(), bearerToken));
   }
 
   Single<List<Channel>> getChannels(boolean active) {
     // TODO: 3/19/2025 Refresh bearer token and pass downstream.
-    return proxy
-        .getChannels(active)
-        .subscribeOn(scheduler);
+    return signInService
+        .refreshBearerToken()
+        .observeOn(scheduler)
+        .map((token) -> String.format(BEARER_TOKEN_FORMAT, token))
+        .flatMap((bearerToken) -> proxy.getChannels(active, bearerToken));
   }
-
-
-
 
 }

@@ -18,6 +18,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+/** @noinspection deprecation*/
 @Singleton
 public class GoogleSignInService {
 
@@ -43,6 +44,12 @@ public class GoogleSignInService {
                 .addOnFailureListener(emitter::onError)
         )
         .observeOn(Schedulers.io());
+  }
+
+  //account is the object we're invoking the getIdToken() method on
+  public Single<String> refreshBearerToken() {
+    return refresh()
+        .map(GoogleSignInAccount::getIdToken);
   }
 
   //if silent sign in doesn't occur, intentional sign in cues up to start login

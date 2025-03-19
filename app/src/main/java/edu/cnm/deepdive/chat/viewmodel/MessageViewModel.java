@@ -75,6 +75,7 @@ public class MessageViewModel extends ViewModel implements DefaultLifecycleObser
 //the UI should be able to  fetch a channel, fetch a message, change a channel, post a channel, add a message to a channel
 
   public void fetchChannels() {
+    throwable.setValue(null);
     messageService
         .getChannels(true)
         .subscribe(
@@ -93,9 +94,8 @@ public class MessageViewModel extends ViewModel implements DefaultLifecycleObser
   public void fetchMessages() {
     throwable.postValue(null);
     List<Message> messages = this.messages.getValue();
-    //noinspection SequencedCollectionMethodCanBeUsed,DataFlowIssue
     Instant since = getSince(messages);
-    //this gets a piece of machinery<first 4 parts on board diagram of asynch process>
+    //this gets a piece of machinery<first 4 parts on board diagram of async process>
     //subscribe - provides consumer of a successful result, of an unsuccessful result & pending
     messageService
         .getMessages(selectedChannel.getValue().getKey(), since)

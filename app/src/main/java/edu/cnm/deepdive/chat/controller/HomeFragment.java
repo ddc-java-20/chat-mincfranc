@@ -23,7 +23,7 @@ import edu.cnm.deepdive.chat.viewmodel.LoginViewModel;
 import edu.cnm.deepdive.chat.viewmodel.MessageViewModel;
 
 //the only reason we need ViewModel is bec we need it to sign out
-
+/** @noinspection SequencedCollectionMethodCanBeUsed*/
 @AndroidEntryPoint
 public class HomeFragment extends Fragment implements MenuProvider {
 
@@ -38,6 +38,8 @@ public class HomeFragment extends Fragment implements MenuProvider {
   public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
       @Nullable Bundle savedInstanceState) {
     binding = FragmentHomeBinding.inflate(inflater, container, false);
+    // TODO: 3/19/2025 Attach listener to send button, so that when clicked, a new message instance
+    //  is created and passed to messageViewModel.
     return binding.getRoot();
   }
 
@@ -45,30 +47,12 @@ public class HomeFragment extends Fragment implements MenuProvider {
   @Override
   public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
-    loginViewModel = new ViewModelProvider(requireActivity())
-        .get(LoginViewModel.class);
     LifecycleOwner owner = getViewLifecycleOwner();
-    loginViewModel
-        .getAccount()
-        .observe(owner, (account) -> {
-          if (account != null) {
-            Log.d(TAG, "Bearer " + account.getIdToken());
-          } else {
-            Navigation.findNavController(binding.getRoot())
-                .navigate(HomeFragmentDirections.navigateToPreLoginFragment());
-          }
-        });
-    messageViewModel = new ViewModelProvider(this)
-        .get(MessageViewModel.class);
-    getLifecycle().addObserver(messageViewModel);
-    messageViewModel
-        .getChannels()
-            .observe(owner, (channels) -> {
-              // TODO: 3/19/2025 Attach an array adapter to a spinner to display the channels.
-              Log.d(TAG, "Channels " + channels);
-            });
+    setupLoginViewModel(owner);
+    setupMessageViewModel(owner);
     requireActivity().addMenuProvider(this, owner, State.RESUMED);
   }
+
 
   @Override
   public void onDestroyView() {
@@ -87,9 +71,43 @@ public class HomeFragment extends Fragment implements MenuProvider {
     boolean handled = false;
     if (menuItem.getItemId() == R.id.sign_out) {
       loginViewModel.signOut();
-      handled= true;
+      handled = true;
     }
     return handled;
+  }
+
+
+  private void setupLoginViewModel(LifecycleOwner owner) {
+    loginViewModel = new ViewModelProvider(requireActivity())
+        .get(LoginViewModel.class);
+    loginViewModel
+        .getAccount()
+        .observe(owner, (account) -> {
+          if (account != null) {
+            Log.d(TAG, "Bearer " + account.getIdToken());
+          } else {
+            Navigation.findNavController(binding.getRoot())
+                .navigate(HomeFragmentDirections.navigateToPreLoginFragment());
+          }
+        });
+  }
+
+  private void setupMessageViewModel(LifecycleOwner owner) {
+    messageViewModel = new ViewModelProvider(this)
+        .get(MessageViewModel.class);
+    getLifecycle().addObserver(messageViewModel);
+    messageViewModel
+        .getChannels()
+        .observe(owner, (channels) -> {
+          // TODO: 3/19/2025 Attach an array adapter to a spinner to display the channels.
+          messageViewModel.setSelectedChannel(channels.get(0));
+        });
+    messageViewModel
+        .getMessages()
+        .observe(owner, (messages) -> {
+          // TODO: 3/19/2025 pass data to recyclerview adapter, and notify adapter that the data has changed.
+          // TODO: 3/19/2025 Scroll so that the most recent message is visible.
+        });
   }
 
 }

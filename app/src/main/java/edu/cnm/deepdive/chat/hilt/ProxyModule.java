@@ -4,15 +4,18 @@ package edu.cnm.deepdive.chat.hilt;
 import android.content.Context;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializer;
 import dagger.Module;
 import dagger.Provides;
 import dagger.hilt.InstallIn;
 import dagger.hilt.android.qualifiers.ApplicationContext;
 import dagger.hilt.components.SingletonComponent;
+import edu.cnm.deepdive.chat.InstantDeserializer;
 import edu.cnm.deepdive.chat.R;
 import edu.cnm.deepdive.chat.service.ChatServiceLongPollingProxy;
 import edu.cnm.deepdive.chat.service.ChatServiceProxy;
 import java.time.Duration;
+import java.time.Instant;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import okhttp3.Interceptor;
@@ -28,17 +31,18 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class ProxyModule {
 
   @Inject
-  ProxyModule() {}
+  ProxyModule() {
+  }
 
-//writing methods to build GSON object, ie register type adapter, for deserializing incoming and outgoing data.
+  //writing methods to build GSON object, ie register type adapter, for deserializing incoming and outgoing data.
 //we will only pay attention to fields with @Expose annotation
 //create builder objects (GsonBuilder) and invoke methods on the builder object (.exclude, .create, etc),
 // to return the object we want to build
   @Provides
   @Singleton
-  Gson provideGson() {
+  Gson provideGson(InstantDeserializer deserializer) {
     return new GsonBuilder()
-    // TODO: 3/12/25 Register type adapters as necessary (e.g., for UUID, Instant)
+        .registerTypeAdapter(Instant.class, deserializer)
         .excludeFieldsWithoutExposeAnnotation() //returns fields we've created already
         .create();  //returns new fields
   }
@@ -93,14 +97,5 @@ public class ProxyModule {
         .build()
         .create(ChatServiceLongPollingProxy.class);
   }
-
-
-
-
-
-
-
-
-
 
 }

@@ -14,9 +14,12 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import javax.inject.Inject;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+/** @noinspection SequencedCollectionMethodCanBeUsed*/
 @HiltViewModel
 public class MessageViewModel extends ViewModel implements DefaultLifecycleObserver {
 
@@ -59,12 +62,12 @@ public class MessageViewModel extends ViewModel implements DefaultLifecycleObser
 
   //method UI can call to select LiveData, when we get new channel- if it's different from the one
   // being passed in (Channel channel), we clear our messages and write a new query
-  //look at dto>channel ******
-  public void setSelectedChannel(@NotNull Channel channel) {
-    if (!channel.equals(selectedChannel.getValue())) {
-      messages.setValue(new LinkedList<>());
-      selectedChannel.setValue(channel);
-      fetchMessages();
+  //look at dto>channel ****** can be nullable bec channel can be null per fetchChannels
+  public void setSelectedChannel(@Nullable Channel channel) {
+    if (!Objects.equals(channel, selectedChannel.getValue())) {
+      messages.postValue(new LinkedList<>());
+      selectedChannel.postValue(channel);
+      fetchMessages(channel);
     }
   }
 
@@ -73,41 +76,41 @@ public class MessageViewModel extends ViewModel implements DefaultLifecycleObser
   }
 
 //the UI should be able to  fetch a channel, fetch a message, change a channel, post a channel, add a message to a channel
-
+//if compares current to previous channel, so if this is not empty, and the channel I selected is available, return/use that channel, if previously selected is null, return new channel
   public void fetchChannels() {
     throwable.setValue(null);
     messageService
         .getChannels(true)
         .subscribe(
-            channels::postValue,
+            this::handleChannels,
             this::postThrowable,
             pending
         );
   }
 
+
   //Ternary, if the list is empty, fetch since the last time they were fetched(?), else get the last posted (:)
   //Instant.MIN= the last 30 minutes per messageService in server side- getEffectiveSince(MAX= 30 MIN)
 
-  /**
-   * @noinspection DataFlowIssue
-   */
-  public void fetchMessages() {
-    throwable.postValue(null);
-    List<Message> messages = this.messages.getValue();
-    Instant since = getSince(messages);
-    //this gets a piece of machinery<first 4 parts on board diagram of async process>
-    //subscribe - provides consumer of a successful result, of an unsuccessful result & pending
-    messageService
-        .getMessages(selectedChannel.getValue().getKey(), since)
-        .subscribe(
-            (msgs) -> {
-              messages.addAll(msgs);
-              this.messages.postValue(messages);
-              fetchChannels();   //successful result consumer that is called at other points and times, not here, not recursive
-            },
-            this::postThrowable, //unsuccessful result consumer
-            pending
-        );
+  public void fetchMessages(Channel selectedChannel) {
+    if (selectedChannel != null) {
+      throwable.postValue(null);
+      List<Message> messages = this.messages.getValue();
+      Instant since = getSince(messages);
+      //this gets a piece of machinery<first 4 parts on board diagram of async process>
+      //subscribe - provides consumer of a successful result, of an unsuccessful result & pending
+      messageService
+          .getMessages(selectedChannel.getKey(), since)
+          .subscribe(
+              (msgs) -> {
+                messages.addAll(msgs);
+                this.messages.postValue(messages);
+                fetchMessages(selectedChannel);   //successful result consumer that is called at other points and times, not here, not recursive
+              },
+              this::postThrowable, //unsuccessful result consumer
+              pending
+          );
+    }
   }
 
   /**
@@ -132,6 +135,7 @@ public class MessageViewModel extends ViewModel implements DefaultLifecycleObser
   @Override
   public void onResume(@NotNull LifecycleOwner owner) {
     DefaultLifecycleObserver.super.onResume(owner);
+    Channel channel = selectedChannel.getValue();
     if (selectedChannel.getValue() != null) {
       fetchChannels();
     }
@@ -146,8 +150,19 @@ public class MessageViewModel extends ViewModel implements DefaultLifecycleObser
     DefaultLifecycleObserver.super.onStop(owner);
   }
 
+  private void handleChannels(List<Channel> channels) {
+    this.channels.postValue(channels);
+    Channel previous = this.selectedChannel.getValue();
+    if(!channels.isEmpty()) {
+      if (previous == null || !channels.contains(previous)) {
+        setSelectedChannel(channels.get(0));
+      }
+    } else  {
+      setSelectedChannel(null);
+    }
+  }
+
   private static Instant getSince(List<Message> messages) {
-    //noinspection SequencedCollectionMethodCanBeUsed
     return messages.isEmpty()
         ? Instant.MIN
         : messages
@@ -160,6 +175,8 @@ public class MessageViewModel extends ViewModel implements DefaultLifecycleObser
     Log.e(TAG, throwable.getMessage(), throwable);
     this.throwable.postValue(throwable);
   }
+
+
 
 
 }

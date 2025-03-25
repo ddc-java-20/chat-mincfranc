@@ -20,7 +20,7 @@ public class ExceptionMapping {
   public void invalidRequest() {
   }
 
-  @ExceptionHandler(IllegalArgumentException.class)
+  @ExceptionHandler(IllegalStateException.class)
   @ResponseStatus(value = HttpStatus.CONFLICT, reason = "Game over!")
   public void gameOver() {
   }

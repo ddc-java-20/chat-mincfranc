@@ -2,6 +2,46 @@
 <androidx.constraintlayout.widget.ConstraintLayout
   xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="match_parent"
-  android:layout_height="match_parent">
+  android:layout_height="match_parent"
+  xmlns:app="http://schemas.android.com/apk/res-auto">
+
+  <Spinner
+    android:id="@+id/channels"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/half_dynamic_spacing"
+    app:layout_constraintTop_toTopOf="parent"/>
+
+  <androidx.recyclerview.widget.RecyclerView
+    android:id="@+id/messages"
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:orientation="vertical"
+    android:layout_marginVertical="@dimen/half_dynamic_spacing"
+    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+    app:layout_constraintTop_toBottomOf="@id/channels"
+    app:layout_constraintBottom_toTopOf="@id/message_layout"/>
+
+    <com.google.android.material.textfield.TextInputLayout
+      android:id="@+id/message_layout"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_margin="@dimen/half_dynamic_spacing"
+      app:hintEnabled="true"
+      app:hintAnimationEnabled="true"
+      app:layout_constraintBottom_toBottomOf="parent">
+
+      <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textMultiLine"
+        android:minLines="1"
+        android:maxLines="5"
+        android:hint="@string/new_message_hint"/>
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

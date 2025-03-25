@@ -3,5 +3,6 @@
   <string name="sign_in_failure_message">Unable to sign in with provided credentials</string>
   <string name="sign_out_title">Sign out</string>
   <string name="login_fragment_label">Sign In</string>
+  <string name="new_message_hint">New Message</string>
 
 </resources>

@@ -1,8 +1,10 @@
 package edu.cnm.deepdive.chat.model.dto;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.google.gson.annotations.Expose;
 import java.util.UUID;
+import org.jetbrains.annotations.NotNull;
 
 public class Channel {
 
@@ -65,5 +67,11 @@ public class Channel {
       result = false;
     }
     return super.equals(obj);
+  }
+
+  @NonNull
+  @Override
+  public @NotNull String toString() {
+    return name;
   }
 }

@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.boot.spring.boot.starter.thymeleaf)
     implementation(libs.boot.spring.boot.starter.web)
     implementation(libs.thymeleaf.extras.springsecurity6)
+    implementation(libs.spring.boot.starter.validation)
     runtimeOnly(libs.h2database.h2)
     annotationProcessor(libs.boot.spring.boot.configuration.processor)
     testImplementation(libs.boot.spring.boot.starter.test)

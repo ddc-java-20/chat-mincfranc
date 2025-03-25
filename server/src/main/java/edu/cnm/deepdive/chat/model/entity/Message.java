@@ -17,9 +17,12 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.validator.constraints.Length;
 
 @Entity
 //this should help make this polling query fast
@@ -46,6 +49,8 @@ public class Message {
   private Instant posted;
 
   @Column(nullable = false, updatable = false, length = 255)
+  @NotNull
+  @Length(min = 1, max = 255)
   private String text;
 
   @ManyToOne(fetch = FetchType.EAGER, optional = false)

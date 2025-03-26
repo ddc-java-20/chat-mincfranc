@@ -10,7 +10,6 @@ import dagger.Provides;
 import dagger.hilt.InstallIn;
 import dagger.hilt.android.qualifiers.ApplicationContext;
 import dagger.hilt.components.SingletonComponent;
-import edu.cnm.deepdive.chat.InstantDeserializer;
 import edu.cnm.deepdive.chat.R;
 import edu.cnm.deepdive.chat.service.ChatServiceLongPollingProxy;
 import edu.cnm.deepdive.chat.service.ChatServiceProxy;
@@ -40,7 +39,7 @@ public class ProxyModule {
 // to return the object we want to build
   @Provides
   @Singleton
-  Gson provideGson(InstantDeserializer deserializer) {
+  Gson provideGson(JsonDeserializer<Instant> deserializer) {
     return new GsonBuilder()
         .registerTypeAdapter(Instant.class, deserializer)
         .excludeFieldsWithoutExposeAnnotation() //returns fields we've created already

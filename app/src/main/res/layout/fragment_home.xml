@@ -3,7 +3,8 @@
   xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
-  xmlns:app="http://schemas.android.com/apk/res-auto">
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools">
 
   <Spinner
     android:id="@+id/channels"
@@ -20,7 +21,8 @@
     android:layout_marginVertical="@dimen/half_dynamic_spacing"
     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
     app:layout_constraintTop_toBottomOf="@id/channels"
-    app:layout_constraintBottom_toTopOf="@id/message_layout"/>
+    app:layout_constraintBottom_toTopOf="@id/message_layout"
+    tools:listitem="@layout/item_message"/>
 
     <com.google.android.material.textfield.TextInputLayout
       android:id="@+id/message_layout"
@@ -56,6 +58,16 @@
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintTop_toTopOf="@id/message_layout"
     app:layout_constraintBottom_toBottomOf="@id/message_layout"/>
+
+  <com.google.android.material.progressindicator.CircularProgressIndicator
+    android:id="@+id/loading_indicator"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:indeterminate="true"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"/>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

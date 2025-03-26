@@ -49,7 +49,8 @@ public class GoogleSignInService {
   //account is the object we're invoking the getIdToken() method on
   public Single<String> refreshBearerToken() {
     return refresh()
-        .map(GoogleSignInAccount::getIdToken);
+        .map(googleSignInAccount ->
+            googleSignInAccount.getIdToken());
   }
 
   //if silent sign in doesn't occur, intentional sign in cues up to start login

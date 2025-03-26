@@ -52,7 +52,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
   }
 
   public void setMessages(@NonNull List<Message> messages) {
-    int oldSize = messages.size();
+    int oldSize = this.messages.size();
     if (messages.isEmpty()) {
       this.messages.clear();
       notifyItemRangeRemoved(0, oldSize);

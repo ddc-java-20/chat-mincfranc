@@ -88,11 +88,12 @@ public class MessageService implements AbstractMessageService {
   private void checkForNewMessages(Channel channel, Instant since,
       DeferredResult<List<Message>> result,
       ScheduledFuture<?>[] futurePolling) {
+    Instant effectiveSince = getEffectiveSince(since);
     if (!messageRepository
-        .getLastPostedByChannelAndPostedAfter(channel, since, TOP_ONE)
+        .getLastPostedByChannelAndPostedAfter(channel, effectiveSince, TOP_ONE)
         .isEmpty()) {
       result.setResult(
-          messageRepository.getAllByChannelAndPostedAfterOrderByPostedAsc(channel, since));
+          messageRepository.getAllByChannelAndPostedAfterOrderByPostedAsc(channel, effectiveSince));
       futurePolling[0].cancel(true);
     }
   }

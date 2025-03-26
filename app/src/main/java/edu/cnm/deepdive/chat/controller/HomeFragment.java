@@ -1,7 +1,6 @@
 package edu.cnm.deepdive.chat.controller;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -21,12 +20,15 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 import dagger.hilt.android.AndroidEntryPoint;
 import edu.cnm.deepdive.chat.R;
+import edu.cnm.deepdive.chat.adapter.MessageAdapter;
 import edu.cnm.deepdive.chat.databinding.FragmentHomeBinding;
 import edu.cnm.deepdive.chat.model.dto.Channel;
 import edu.cnm.deepdive.chat.model.dto.Message;
 import edu.cnm.deepdive.chat.viewmodel.LoginViewModel;
 import edu.cnm.deepdive.chat.viewmodel.MessageViewModel;
 import java.util.List;
+import java.util.Objects;
+import javax.inject.Inject;
 
 //the only reason we need ViewModel is bec we need it to sign out
 
@@ -37,6 +39,9 @@ import java.util.List;
 public class HomeFragment extends Fragment implements MenuProvider, OnItemSelectedListener {
 
   private static final String TAG = HomeFragment.class.getSimpleName();
+
+  @Inject
+  MessageAdapter adapter;
 
   private FragmentHomeBinding binding;
   private LoginViewModel loginViewModel;
@@ -51,6 +56,7 @@ public class HomeFragment extends Fragment implements MenuProvider, OnItemSelect
     binding = FragmentHomeBinding.inflate(inflater, container, false);
     // TODO: 3/19/2025 Attach listener to send button, so that when clicked, a new message instance
     //  is created and passed to messageViewModel.
+    binding.messages.setAdapter(adapter);
     binding.channels.setOnItemSelectedListener(this);
     binding.send.setOnClickListener((v) -> {
       Message message = new Message();
@@ -71,7 +77,6 @@ public class HomeFragment extends Fragment implements MenuProvider, OnItemSelect
     setupMessageViewModel(owner);
     requireActivity().addMenuProvider(this, owner, State.RESUMED);
   }
-
 
   @Override
   public void onDestroyView() {
@@ -95,6 +100,15 @@ public class HomeFragment extends Fragment implements MenuProvider, OnItemSelect
     return handled;
   }
 
+  @Override
+  public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+    Channel channel = (Channel) parent.getItemAtPosition(position);
+    messageViewModel.setSelectedChannel(channel);
+  }
+
+  @Override
+  public void onNothingSelected(AdapterView<?> parent) {
+  }
 
   private void setupLoginViewModel(LifecycleOwner owner) {
     loginViewModel = new ViewModelProvider(requireActivity())
@@ -102,9 +116,7 @@ public class HomeFragment extends Fragment implements MenuProvider, OnItemSelect
     loginViewModel
         .getAccount()
         .observe(owner, (account) -> {
-          if (account != null) {
-            Log.d(TAG, "Bearer " + account.getIdToken());
-          } else {
+          if (account == null) {
             Navigation.findNavController(binding.getRoot())
                 .navigate(HomeFragmentDirections.navigateToPreLoginFragment());
           }
@@ -119,23 +131,29 @@ public class HomeFragment extends Fragment implements MenuProvider, OnItemSelect
         .getChannels()
         .observe(owner, (channels) -> {
           this.channels = channels;
-          // Array adapter attached to a spinner(drop down menu) to display/inflate the channels.
           ArrayAdapter<Channel> adapter = new ArrayAdapter<>(requireContext(),
+              // Array adapter attached to a spinner(drop down menu) to display/inflate the channels.
               android.R.layout.simple_list_item_1, channels);
           binding.channels.setAdapter(adapter);
           setChannelSelection();
         });
     messageViewModel
-        .getMessages()
+        .getMessages()   //returns a livedata container, not the data itself, then observes
         .observe(owner, (messages) -> {
-          // TODO: 3/19/2025 pass data to recyclerview adapter, and notify adapter that the data has changed.
-          // TODO: 3/19/2025 Scroll so that the most recent message is visible.
+          adapter.setMessages(
+              messages); //passes the msgs received by getMessages/observe to the adapter
+          binding.messages.scrollToPosition(messages.size() - 1);
+          binding.loadingIndicator.setVisibility(View.GONE);
         });
     messageViewModel
-        .getSelectedChannel()
+        .getSelectedChannel() //
         .observe(owner, (channel) -> {
-          selectedChannel = channel;
-          setChannelSelection();
+          if (!Objects.equals(selectedChannel, channel)) {
+            selectedChannel = channel;
+            setChannelSelection();
+            adapter.setMessages(List.of());
+            binding.loadingIndicator.setVisibility(View.VISIBLE);
+          }
         });
   }
 
@@ -145,18 +163,7 @@ public class HomeFragment extends Fragment implements MenuProvider, OnItemSelect
       if (position >= 0) {
         binding.channels.setSelection(position, true);
       }
-
     }
   }
 
-  @Override
-  public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-    Channel channel = (Channel) parent.getItemAtPosition(position);
-    messageViewModel.setSelectedChannel(channel);
-  }
-
-  @Override
-  public void onNothingSelected(AdapterView<?> parent) {
-
-  }
 }

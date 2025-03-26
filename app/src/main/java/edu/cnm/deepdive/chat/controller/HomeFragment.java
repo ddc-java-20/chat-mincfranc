@@ -29,7 +29,10 @@ import edu.cnm.deepdive.chat.viewmodel.MessageViewModel;
 import java.util.List;
 
 //the only reason we need ViewModel is bec we need it to sign out
-/** @noinspection SequencedCollectionMethodCanBeUsed*/
+
+/**
+ * @noinspection SequencedCollectionMethodCanBeUsed
+ */
 @AndroidEntryPoint
 public class HomeFragment extends Fragment implements MenuProvider, OnItemSelectedListener {
 
@@ -119,8 +122,8 @@ public class HomeFragment extends Fragment implements MenuProvider, OnItemSelect
           // Array adapter attached to a spinner(drop down menu) to display/inflate the channels.
           ArrayAdapter<Channel> adapter = new ArrayAdapter<>(requireContext(),
               android.R.layout.simple_list_item_1, channels);
-              binding.channels.setAdapter(adapter);
-              setChannelSelection();
+          binding.channels.setAdapter(adapter);
+          setChannelSelection();
         });
     messageViewModel
         .getMessages()
@@ -137,9 +140,9 @@ public class HomeFragment extends Fragment implements MenuProvider, OnItemSelect
   }
 
   private void setChannelSelection() {
-    if(channels != null && selectedChannel != null) {
+    if (channels != null && selectedChannel != null) {
       int position = channels.indexOf(selectedChannel);
-      if(position >= 0) {
+      if (position >= 0) {
         binding.channels.setSelection(position, true);
       }
 

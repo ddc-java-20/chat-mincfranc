@@ -14,7 +14,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import edu.cnm.deepdive.chat.R;
 import edu.cnm.deepdive.chat.viewmodel.LoginViewModel;
 
-/** @noinspection deprecation*/
+/**
+ * @noinspection deprecation
+ */
 public class PreLoginFragment extends Fragment {
 
   private LoginViewModel viewModel;

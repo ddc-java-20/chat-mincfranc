@@ -20,13 +20,15 @@ import javax.inject.Inject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/** @noinspection SequencedCollectionMethodCanBeUsed*/
+/**
+ * @noinspection SequencedCollectionMethodCanBeUsed
+ */
 @HiltViewModel
 public class MessageViewModel extends ViewModel implements DefaultLifecycleObserver {
 
   private static final String TAG = MessageViewModel.class.getSimpleName();
 
-//FIRST create fields to: reference to message service, to get all messages for a particular channel
+  //FIRST create fields to: reference to message service, to get all messages for a particular channel
 //as we make asynchronous requests and UI has received messages, then empty the jobs requests bucket
   private final MessageService messageService;
   private final MutableLiveData<List<Message>> messages;
@@ -82,7 +84,7 @@ public class MessageViewModel extends ViewModel implements DefaultLifecycleObser
     return throwable;
   }
 
-//the UI should be able to  fetch a channel, fetch a message, change a channel, post a channel, add a message to a channel
+  //the UI should be able to  fetch a channel, fetch a message, change a channel, post a channel, add a message to a channel
 //if compares current to previous channel, so if this is not empty, and the channel I selected is available,
 // return/use that channel, if previously selected is null, return new channel
   public void fetchChannels() {
@@ -95,7 +97,6 @@ public class MessageViewModel extends ViewModel implements DefaultLifecycleObser
             pending
         );
   }
-
 
   //Ternary, if the list is empty, fetch since the last time they were fetched(?), else get the last posted (:)
   //Instant.MIN= the last 30 minutes per messageService in server side- getEffectiveSince(MAX= 30 MIN)
@@ -116,7 +117,8 @@ public class MessageViewModel extends ViewModel implements DefaultLifecycleObser
                 List<Message> messages = this.messages.getValue();
                 if (!msgs.isEmpty()) {
                   messages.addAll(msgs);
-                  fetchMessages(selectedChannel, getSince(msgs));   //successful result consumer that is called at other points and times, not here, not recursive, or create time stamp otherwise
+                  fetchMessages(selectedChannel, getSince(
+                      msgs));   //successful result consumer that is called at other points and times, not here, not recursive, or create time stamp otherwise
                 } else {
                   fetchMessages(selectedChannel, since);
                 }
@@ -128,10 +130,13 @@ public class MessageViewModel extends ViewModel implements DefaultLifecycleObser
     }
   }
 
-   //when we subscribe to a completable we don't have a consumer
+  //when we subscribe to a completable we don't have a consumer
   //then put ticket in pending bucket
   //list of a bunch of machines in a row, then ignoreElement turns it into a completion event
-  /** @noinspection DataFlowIssue*/
+
+  /**
+   * @noinspection DataFlowIssue
+   */
   public void sendMessage(Message message) {
     throwable.setValue(null);
     Instant since = getSince(messages.getValue());
@@ -169,11 +174,11 @@ public class MessageViewModel extends ViewModel implements DefaultLifecycleObser
   private void handleChannels(List<Channel> channels) {
     this.channels.postValue(channels);
     Channel previous = this.selectedChannel.getValue();
-    if(!channels.isEmpty()) {
+    if (!channels.isEmpty()) {
       if (previous == null || !channels.contains(previous)) {
         setSelectedChannel(channels.get(0));
       }
-    } else  {
+    } else {
       setSelectedChannel(null);
     }
   }
@@ -191,8 +196,6 @@ public class MessageViewModel extends ViewModel implements DefaultLifecycleObser
     Log.e(TAG, throwable.getMessage(), throwable);
     this.throwable.postValue(throwable);
   }
-
-
 
 
 }

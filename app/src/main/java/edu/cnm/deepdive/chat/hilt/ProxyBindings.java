@@ -18,6 +18,5 @@ public interface ProxyBindings {
 
 }
 
-
 //binds methods always abstract
 //provides methods always concrete

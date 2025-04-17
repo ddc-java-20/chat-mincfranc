@@ -13,6 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+import com.android.build.gradle.internal.tasks.factory.dependsOn
 import java.io.FileInputStream
 import java.util.Locale
 import java.util.Properties
@@ -183,9 +184,11 @@ android.applicationVariants.configureEach {
         }
     }
 
-    val docTitle = "${project.property("appName")} client ${android.defaultConfig.versionName}"
+    val docTitle = "${project.property("appName")} ${android.defaultConfig.versionName}"
 
-    val task = project.tasks.create("generate${variantName}Javadoc", Javadoc::class.java) {
+    val task = project.tasks.register("generate${variantName}Javadoc", Javadoc::class.java) {
+
+        dependsOn(tasks.named("assemble$variantName"))
         title = docTitle
         group = "reporting"
         description = "Generates Javadoc for $simpleName build variant."
@@ -200,11 +203,13 @@ android.applicationVariants.configureEach {
             "**/BuildConfig*.java"
         )
 
-        setDestinationDir(projectDir.toPath().resolve("../docs/api/client").toFile())
+        if (project.hasProperty("javadocDestDir")) {
+            setDestinationDir(projectDir.toPath().resolve(project.property("javadocDestDir") as String).toFile())
+        }
 
         doFirst {
             classpath = project.files(
-                projectDir.resolve("build/intermediates/javac/$simpleName/classes"),
+                projectDir.resolve("build/intermediates/javac/$simpleName/compile${variantName}JavaWithJavac/classes"),
                 javaCompileProvider.get().classpath.files,
                 android.bootClasspath
             )
@@ -217,13 +222,12 @@ android.applicationVariants.configureEach {
             isAuthor = false
             links(
                 "https://docs.oracle.com/en/java/javase/${libs.versions.java.get()}/docs/api/",
-                // TODO Modify or add to this list for the specific libraries used.
                 "https://reactivex.io/RxJava/3.x/javadoc/",
                 "https://javadoc.io/doc/com.google.dagger/dagger/${libs.versions.hilt.get()}/",
                 "https://javadoc.io/doc/com.google.code.gson/gson/${libs.versions.gson.get()}/",
                 "https://square.github.io/retrofit/2.x/retrofit/"
             )
-            linksOffline("https://developer.android.com/reference", "$projectDir")
+            linksOffline("https://developer.android.com/reference", "$projectDir/..")
             addBooleanOption("html5", true)
             addStringOption("Xdoclint:none", "-quiet")
         }
@@ -231,8 +235,7 @@ android.applicationVariants.configureEach {
         isFailOnError = true
     }
 
-    task.dependsOn(tasks["assemble$variantName"])
-    tasks["generateApiDoc"].dependsOn(task)
+    tasks.named("generateApiDoc").dependsOn(task)
 }
 
 fun getLocalProperty(name: String): String? {
